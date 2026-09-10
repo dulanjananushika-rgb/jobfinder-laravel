@@ -7,9 +7,23 @@
     @csrf @if($job->exists) @method('PUT') @endif
     <div class="grid grid-2">
         <label>Title <input name="title" value="{{ old('title', $job->title) }}" required></label>
-        <label>Main Category <input name="main_category" value="{{ old('main_category', $job->main_category) }}" required></label>
+        <label>Main Category
+            <select name="main_category" required>
+                <option value="">Select a category</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category }}" @selected(old('main_category', $job->main_category) === $category)>{{ $category }}</option>
+                @endforeach
+            </select>
+        </label>
         <label>Sub Category <input name="sub_category" value="{{ old('sub_category', $job->sub_category) }}"></label>
-        <label>Location <input name="location" value="{{ old('location', $job->location) }}" required></label>
+        <label>Location
+            <select name="location" required>
+                <option value="">Select a district</option>
+                @foreach($locations as $location)
+                    <option value="{{ $location }}" @selected(old('location', $job->location) === $location)>{{ $location }}</option>
+                @endforeach
+            </select>
+        </label>
         <label>Type <input name="type" value="{{ old('type', $job->type) }}" placeholder="Full-time" required></label>
         <label>Salary <input name="salary" value="{{ old('salary', $job->salary) }}"></label>
         <label>Deadline <input type="date" name="deadline" value="{{ old('deadline', optional($job->deadline)->format('Y-m-d')) }}"></label>

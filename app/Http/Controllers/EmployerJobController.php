@@ -17,7 +17,7 @@ class EmployerJobController extends Controller
     public function create()
     {
         abort_unless(auth()->user()->isVerifiedEmployer(), 403, 'Your employer account must be verified before posting jobs.');
-        return view('employer.jobs.form', ['job' => new Job()]);
+        return view('employer.jobs.form', $this->formOptions(new Job()));
     }
 
     public function store(Request $request)
@@ -38,7 +38,7 @@ class EmployerJobController extends Controller
     public function edit(Job $job)
     {
         $this->authorizeEmployer($job);
-        return view('employer.jobs.form', compact('job'));
+        return view('employer.jobs.form', $this->formOptions($job));
     }
 
     public function update(Request $request, Job $job)
@@ -77,6 +77,15 @@ class EmployerJobController extends Controller
             'responsibilities' => ['nullable', 'string'],
             'deadline' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
+    }
+
+    private function formOptions(Job $job): array
+    {
+        return [
+            'job' => $job,
+            'categories' => config('jobfinder.categories'),
+            'locations' => config('jobfinder.districts'),
+        ];
     }
 
     private function authorizeEmployer(Job $job): void

@@ -5,7 +5,7 @@
     <h1>Find trusted jobs across Sri Lanka <span class="spark">✦</span></h1>
     <form class="hero-search" method="get" action="{{ route('jobs.index') }}">
         <input name="search" placeholder="Laravel, Banking, Sales, Accounts">
-        <input name="location" placeholder="Colombo, Kandy, Galle, Remote">
+        <input name="location" placeholder="Search by district or Remote">
         <button class="btn">Search</button>
     </form>
 </section>

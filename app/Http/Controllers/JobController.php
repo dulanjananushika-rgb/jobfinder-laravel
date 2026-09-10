@@ -22,8 +22,20 @@ class JobController extends Controller
 
         return view('jobs.index', [
             'jobs' => $jobs,
-            'categories' => Job::active()->select('main_category')->distinct()->pluck('main_category'),
-            'locations' => Job::active()->select('location')->distinct()->pluck('location'),
+            // Keep the complete option lists visible even when there are no
+            // active jobs in a category or district yet.
+            'categories' => collect(config('jobfinder.categories'))
+                ->merge(Job::active()->select('main_category')->distinct()->pluck('main_category'))
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values(),
+            'locations' => collect(config('jobfinder.districts'))
+                ->merge(Job::active()->select('location')->distinct()->pluck('location'))
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values(),
             'types' => Job::active()->select('type')->distinct()->pluck('type'),
         ]);
     }
