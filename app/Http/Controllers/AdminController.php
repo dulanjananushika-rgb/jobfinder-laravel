@@ -177,4 +177,23 @@ class AdminController extends Controller
 
         return back()->with('status', 'Message updated.');
     }
+
+    public function reports()
+    {
+        return view('admin.reports', [
+            'reports' => \App\Models\JobReport::with('job.employer', 'user')->latest()->paginate(15),
+        ]);
+    }
+
+    public function updateReport(Request $request, \App\Models\JobReport $report)
+    {
+        $data = $request->validate([
+            'status' => ['required', Rule::in(['pending', 'resolved', 'dismissed'])],
+            'admin_notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $report->update($data);
+
+        return back()->with('status', 'Report status updated.');
+    }
 }

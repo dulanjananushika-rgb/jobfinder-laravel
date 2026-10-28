@@ -145,6 +145,36 @@
                 <textarea id="respInput" name="responsibilities" placeholder="Key responsibilities and expectations..." style="min-height: 120px;">{{ old('responsibilities', $job->responsibilities) }}</textarea>
             </label>
 
+            <!-- Applicant Screening Questions (Optional) -->
+            <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:10px; padding:18px; margin: 16px 0 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-weight:600; font-size:14px; color:var(--text-heading); display:flex; align-items:center; gap:6px;">
+                        <span>❓ Candidate Screening Questions</span>
+                        <span class="badge" style="font-size:11px;">Optional</span>
+                    </div>
+                </div>
+                <p class="muted" style="font-size:12.5px; margin-bottom:12px;">Add pre-screening questions that candidates must answer when submitting their application (e.g. Notice period, relevant certifications, years of experience).</p>
+
+                @php
+                    $existingQuestions = old('screening_questions', $job->screening_questions ?: []);
+                @endphp
+
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <label>
+                        <span style="font-size:12.5px;">Question 1</span>
+                        <input name="screening_questions[]" value="{{ $existingQuestions[0] ?? '' }}" placeholder="e.g. How many years of hands-on experience do you have with this stack?">
+                    </label>
+                    <label>
+                        <span style="font-size:12.5px;">Question 2</span>
+                        <input name="screening_questions[]" value="{{ $existingQuestions[1] ?? '' }}" placeholder="e.g. What is your earliest start date or notice period?">
+                    </label>
+                    <label>
+                        <span style="font-size:12.5px;">Question 3</span>
+                        <input name="screening_questions[]" value="{{ $existingQuestions[2] ?? '' }}" placeholder="e.g. Are you willing to work from our Colombo office on a hybrid schedule?">
+                    </label>
+                </div>
+            </div>
+
             <div style="border-top:1px solid var(--border-color); padding-top:20px; margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
                 <a href="{{ route('employer.jobs.index') }}" class="btn secondary">Cancel</a>
                 <button class="btn" type="submit">{{ $job->exists ? 'Update Vacancy →' : 'Publish Vacancy →' }}</button>

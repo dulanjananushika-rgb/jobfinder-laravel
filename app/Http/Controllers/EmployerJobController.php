@@ -79,8 +79,14 @@ class EmployerJobController extends Controller
             'description' => ['required', 'string', 'min:20'],
             'requirements' => ['required', 'string', 'min:10'],
             'responsibilities' => ['nullable', 'string'],
+            'screening_questions' => ['nullable', 'array', 'max:5'],
+            'screening_questions.*' => ['nullable', 'string', 'max:255'],
             'deadline' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
+
+        if (isset($validated['screening_questions'])) {
+            $validated['screening_questions'] = array_values(array_filter(array_map('trim', $validated['screening_questions'])));
+        }
 
         if (empty($validated['salary']) && (! empty($validated['min_salary']) || ! empty($validated['max_salary']))) {
             $currency = $validated['salary_currency'] ?? 'LKR';

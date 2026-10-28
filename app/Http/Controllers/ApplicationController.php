@@ -39,6 +39,8 @@ class ApplicationController extends Controller
         $data = $request->validate([
             'cover_letter' => ['required', 'string', 'max:2000'],
             'resume' => [$applyType === 'profile' ? 'nullable' : 'required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            'screening_answers' => ['nullable', 'array'],
+            'screening_answers.*' => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($request->hasFile('resume')) {
@@ -70,6 +72,7 @@ class ApplicationController extends Controller
         $application = $user->applications()->create([
             'job_id' => $job->id,
             'cover_letter' => $data['cover_letter'],
+            'screening_answers' => $data['screening_answers'] ?? null,
             'resume_path' => $path,
             'status' => 'pending',
             'ai_match_score' => $aiResult['score'],
@@ -126,6 +129,68 @@ class ApplicationController extends Controller
             ->withQueryString();
 
         return view('employer.applications', compact('applications'));
+    }
+
+    public function exportCsv(Request $request)
+    {
+        abort_unless(auth()->user()->isEmployer(), 403);
+
+        $applications = JobApplication::with('job', 'jobSeeker')
+            ->whereHas('job', fn ($query) => $query->where('employer_id', auth()->id()))
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
+            ->when($request->filled('job_id'), fn ($query) => $query->where('job_id', $request->job_id))
+            ->latest()
+            ->get();
+
+        $filename = 'candidates-export-' . now()->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function () use ($applications) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            fputcsv($handle, [
+                'Application ID',
+                'Job Title',
+                'Candidate Name',
+                'Candidate Email',
+                'Candidate Phone',
+                'AI Match Score',
+                'Status',
+                'Applied Date',
+                'Screening Q&A',
+                'Cover Letter Pitch',
+            ]);
+
+            foreach ($applications as $app) {
+                $screeningFormatted = '';
+                if ($app->job && ! empty($app->job->screening_questions) && ! empty($app->screening_answers)) {
+                    $qaPairs = [];
+                    foreach ($app->job->screening_questions as $idx => $q) {
+                        $ans = $app->screening_answers[$idx] ?? 'No answer';
+                        $qaPairs[] = "Q: {$q} | A: {$ans}";
+                    }
+                    $screeningFormatted = implode(' || ', $qaPairs);
+                }
+
+                fputcsv($handle, [
+                    '#APP-' . $app->id,
+                    $app->job?->title ?? 'N/A',
+                    $app->jobSeeker?->name ?? 'N/A',
+                    $app->jobSeeker?->email ?? 'N/A',
+                    $app->jobSeeker?->phone ?? 'N/A',
+                    $app->ai_match_score ? $app->ai_match_score . '%' : 'N/A',
+                    ucfirst($app->status),
+                    $app->created_at->format('Y-m-d H:i'),
+                    $screeningFormatted,
+                    $app->cover_letter,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 
     public function updateStatus(Request $request, JobApplication $application)

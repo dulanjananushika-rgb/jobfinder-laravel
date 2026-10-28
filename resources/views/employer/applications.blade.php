@@ -29,6 +29,10 @@
     @if(request('status') || request('min_match'))
         <a class="btn ghost btn-sm" href="{{ route('employer.applications.index') }}">Reset</a>
     @endif
+
+    <a class="btn secondary btn-sm" href="{{ route('employer.applications.export', request()->all()) }}" style="margin-left:auto; gap:6px;">
+        📥 Export Candidates (CSV)
+    </a>
 </form>
 
 <div class="card" style="padding: 0; overflow: hidden;">

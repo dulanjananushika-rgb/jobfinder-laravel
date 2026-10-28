@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'JobFinder - Sri Lanka Career Network')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @stack('meta')
 </head>
 <body>
 <div class="shell">
@@ -31,6 +32,7 @@
                         <a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}" href="{{ route('admin.users') }}">Users</a>
                         <a class="nav-link {{ request()->routeIs('admin.jobs*') ? 'active' : '' }}" href="{{ route('admin.jobs') }}">Moderate Jobs</a>
                         <a class="nav-link {{ request()->routeIs('admin.applications*') ? 'active' : '' }}" href="{{ route('admin.applications') }}">Applications</a>
+                        <a class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}" href="{{ route('admin.reports') }}">Flags & Reports</a>
                         <a class="nav-link {{ request()->routeIs('admin.messages*') ? 'active' : '' }}" href="{{ route('admin.messages') }}">Inquiries</a>
                     @endif
                 @else

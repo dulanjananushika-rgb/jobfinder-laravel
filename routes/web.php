@@ -12,7 +12,9 @@ use App\Http\Controllers\FeaturedJobController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InterviewController;
+use App\Http\Controllers\JobAlertController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\JobReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResetPasswordController;
@@ -38,9 +40,11 @@ Route::view('/blog', 'pages.blog')->name('blog');
 Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::view('/terms', 'pages.terms')->name('terms');
 
-// Job Directory
+// Job Directory & Safety
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show');
+Route::post('/jobs/{job}/report', [JobReportController::class, 'store'])->middleware('throttle:5,1')->name('jobs.report');
+Route::post('/job-alerts', [JobAlertController::class, 'store'])->middleware('throttle:5,1')->name('job-alerts.store');
 
 // Guest Authentication, Password Reset & Social Login
 Route::middleware('guest')->group(function () {
@@ -105,6 +109,7 @@ Route::middleware(['auth', 'role:employer'])->prefix('employer')->name('employer
     Route::resource('jobs', EmployerJobController::class)->except('show');
     Route::post('/jobs/{job}/promote', [FeaturedJobController::class, 'promote'])->name('jobs.promote');
     Route::get('/applications', [ApplicationController::class, 'employerIndex'])->name('applications.index');
+    Route::get('/applications/export', [ApplicationController::class, 'exportCsv'])->name('applications.export');
     Route::put('/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
     Route::post('/applications/{application}/interview', [InterviewController::class, 'store'])->name('applications.interview');
 });
@@ -123,4 +128,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/applications', [AdminController::class, 'applications'])->name('applications');
     Route::get('/messages', [AdminController::class, 'messages'])->name('messages');
     Route::put('/messages/{message}', [AdminController::class, 'updateMessage'])->name('messages.update');
+    Route::get('/reports', [AdminController::class, 'reports'])->name('reports');
+    Route::put('/reports/{report}', [AdminController::class, 'updateReport'])->name('reports.update');
 });

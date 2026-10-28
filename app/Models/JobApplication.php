@@ -15,6 +15,7 @@ class JobApplication extends Model
         'job_id',
         'job_seeker_id',
         'cover_letter',
+        'screening_answers',
         'resume_path',
         'status',
         'ai_match_score',
@@ -42,6 +43,7 @@ class JobApplication extends Model
         return [
             'withdrawn_at' => 'datetime',
             'ai_match_score' => 'integer',
+            'screening_answers' => 'array',
         ];
     }
 

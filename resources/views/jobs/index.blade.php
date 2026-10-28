@@ -115,6 +115,32 @@
                 <a class="btn secondary btn-sm" href="{{ route('jobs.index') }}">Reset</a>
             </div>
         </form>
+
+        <!-- Job Alerts Email Subscription Card -->
+        <div class="card" style="margin-top: 18px; padding: 18px; background: #f0fdf4; border: 1px solid #bbf7d0;">
+            <div style="font-weight: 700; font-size: 13.5px; color: #047857; margin-bottom: 4px; display:flex; align-items:center; gap:6px;">
+                <span>🔔</span> Get Job Alerts
+            </div>
+            <p class="muted" style="font-size: 12px; margin-bottom: 12px; line-height: 1.4;">Never miss a matching vacancy. Receive daily email alerts for new job postings.</p>
+
+            <form class="form" method="post" action="{{ route('job-alerts.store') }}">
+                @csrf
+                @if(request('category'))
+                    <input type="hidden" name="category" value="{{ request('category') }}">
+                @endif
+                @if(request('location'))
+                    <input type="hidden" name="location" value="{{ request('location') }}">
+                @endif
+                @if(request('search'))
+                    <input type="hidden" name="keyword" value="{{ request('search') }}">
+                @endif
+
+                <label style="margin-bottom:8px;">
+                    <input type="email" name="email" value="{{ auth()->check() ? auth()->user()->email : '' }}" placeholder="your.name@email.com" required style="min-height:36px; font-size:12.5px;">
+                </label>
+                <button class="btn btn-sm" type="submit" style="width:100%; justify-content:center;">Activate Alert</button>
+            </form>
+        </div>
     </aside>
 
     <div>

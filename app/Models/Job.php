@@ -27,6 +27,7 @@ class Job extends Model
         'description',
         'requirements',
         'responsibilities',
+        'screening_questions',
         'deadline',
         'status',
         'is_featured',
@@ -47,6 +48,7 @@ class Job extends Model
             'views_count' => 'integer',
             'min_salary' => 'decimal:2',
             'max_salary' => 'decimal:2',
+            'screening_questions' => 'array',
         ];
     }
 
@@ -92,6 +94,11 @@ class Job extends Model
     public function applications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(JobReport::class);
     }
 
     public function savedByUsers()

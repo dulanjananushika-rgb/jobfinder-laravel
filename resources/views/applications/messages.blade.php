@@ -79,6 +79,17 @@
                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">{{ $application->ai_summary }}</div>
                     </div>
                 @endif
+                @if(!empty($application->screening_answers) && !empty($application->job->screening_questions))
+                    <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:10px 12px; margin-top:6px;">
+                        <strong style="font-size:12px; color:var(--text-heading); display:block; margin-bottom:6px;">📋 Screening Answers:</strong>
+                        @foreach($application->job->screening_questions as $idx => $q)
+                            <div style="font-size:11.5px; margin-bottom:4px; line-height:1.4;">
+                                <div class="muted">{{ $q }}</div>
+                                <div style="font-weight:600; color:var(--primary); margin-top:1px;">{{ $application->screening_answers[$idx] ?? 'No answer' }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
                 <div style="margin-top: 8px;">
                     <a class="btn secondary btn-sm" href="{{ route('applications.resume', $application) }}" target="_blank">
                         📄 Download Verified Resume

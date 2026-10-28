@@ -68,6 +68,25 @@
                 </a>
             </div>
 
+            <!-- Employer Screening Questions -->
+            @if(!empty($job->screening_questions))
+                <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:18px; margin-top:14px;">
+                    <h4 style="font-size:14px; font-weight:700; color:var(--text-heading); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                        <span>❓ Employer Screening Questions</span>
+                    </h4>
+                    <p class="muted" style="font-size:12.5px; margin-bottom:14px;">Please answer these questions directly for the hiring team:</p>
+
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        @foreach($job->screening_questions as $index => $question)
+                            <label>
+                                <span style="font-size:13px; font-weight:600; color:var(--text-heading);">{{ $index + 1 }}. {{ $question }} <span style="color:#ef4444">*</span></span>
+                                <input name="screening_answers[{{ $index }}]" value="{{ old('screening_answers.' . $index) }}" placeholder="Your answer here..." required style="margin-top:4px;">
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div style="border-top: 1px solid var(--border-light); padding-top: 18px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                 <a href="{{ route('jobs.show', $job) }}" class="btn secondary">Cancel</a>
                 <button class="btn" type="submit">Submit Application →</button>
