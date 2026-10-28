@@ -27,7 +27,9 @@ class JobController extends Controller
                 ->merge(Job::active()->select('main_category')->distinct()->pluck('main_category'))
                 ->filter()
                 ->unique()
+                ->reject(fn ($c) => $c === 'Other')
                 ->sort()
+                ->push('Other')
                 ->values(),
             'locations' => collect(config('jobfinder.districts'))
                 ->merge(Job::active()->select('location')->distinct()->pluck('location'))

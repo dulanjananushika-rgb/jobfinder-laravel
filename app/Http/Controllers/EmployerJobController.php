@@ -81,9 +81,16 @@ class EmployerJobController extends Controller
 
     private function formOptions(Job $job): array
     {
+        $categories = collect(config('jobfinder.categories', []))
+            ->reject(fn ($c) => $c === 'Other')
+            ->sort()
+            ->push('Other')
+            ->values()
+            ->all();
+
         return [
             'job' => $job,
-            'categories' => config('jobfinder.categories'),
+            'categories' => $categories,
             'locations' => config('jobfinder.districts'),
         ];
     }

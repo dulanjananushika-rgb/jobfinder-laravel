@@ -34,7 +34,7 @@
 
                 <label>
                     <span>Industry / Category <span style="color:#ef4444">*</span></span>
-                    <select name="main_category" required>
+                    <select name="main_category" id="mainCategorySelect" required onchange="toggleOtherCategory(this.value)">
                         <option value="">Select an industry</option>
                         @foreach($categories as $category)
                             <option value="{{ $category }}" @selected(old('main_category', $job->main_category) === $category)>{{ $category }}</option>
@@ -42,9 +42,9 @@
                     </select>
                 </label>
 
-                <label>
-                    <span>Sub Category / Specialization</span>
-                    <input name="sub_category" value="{{ old('sub_category', $job->sub_category) }}" placeholder="e.g. Backend Development, Auditing">
+                <label id="subCategoryWrapper">
+                    <span id="subCategoryLabel">{{ old('main_category', $job->main_category) === 'Other' ? 'Specify Custom Category Name *' : 'Sub Category / Specialization' }}</span>
+                    <input name="sub_category" id="subCategoryInput" value="{{ old('sub_category', $job->sub_category) }}" placeholder="{{ old('main_category', $job->main_category) === 'Other' ? 'e.g. Drone Pilot, Marine Biology, Event Host' : 'e.g. Backend Development, Auditing' }}">
                 </label>
 
                 <label>
@@ -99,4 +99,21 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleOtherCategory(val) {
+    const label = document.getElementById('subCategoryLabel');
+    const input = document.getElementById('subCategoryInput');
+    if (!label || !input) return;
+
+    if (val === 'Other') {
+        label.innerHTML = 'Specify Custom Category Name <span style="color:#ef4444">*</span>';
+        input.placeholder = 'e.g. Drone Pilot, Marine Biology, Event Host';
+        input.focus();
+    } else {
+        label.textContent = 'Sub Category / Specialization';
+        input.placeholder = 'e.g. Backend Development, Auditing';
+    }
+}
+</script>
 @endsection
