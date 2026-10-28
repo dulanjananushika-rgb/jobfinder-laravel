@@ -63,13 +63,47 @@
                 </label>
 
                 <label>
-                    <span>Salary / Compensation</span>
-                    <input name="salary" value="{{ old('salary', $job->salary) }}" placeholder="e.g. Rs 150,000 - 250,000 / Negotiable">
-                </label>
-
-                <label>
                     <span>Application Deadline</span>
                     <input type="date" name="deadline" value="{{ old('deadline', optional($job->deadline)->format('Y-m-d')) }}">
+                </label>
+            </div>
+
+            <!-- Structured Salary Section -->
+            <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:10px; padding:16px; margin: 6px 0 16px;">
+                <div style="font-weight:600; font-size:14px; margin-bottom:10px; color:var(--text); display:flex; align-items:center; gap:6px;">
+                    <span>💰 Salary & Compensation Structure</span>
+                    <span class="badge" style="font-size:11px; font-weight:normal;">Enables Range Filtering</span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+                    <label>
+                        <span>Min Salary</span>
+                        <input type="number" step="1000" name="min_salary" value="{{ old('min_salary', $job->min_salary) }}" placeholder="e.g. 150000">
+                    </label>
+                    <label>
+                        <span>Max Salary</span>
+                        <input type="number" step="1000" name="max_salary" value="{{ old('max_salary', $job->max_salary) }}" placeholder="e.g. 250000">
+                    </label>
+                    <label>
+                        <span>Currency</span>
+                        <select name="salary_currency">
+                            <option value="LKR" @selected(old('salary_currency', $job->salary_currency ?: 'LKR') === 'LKR')>LKR (Rs)</option>
+                            <option value="USD" @selected(old('salary_currency', $job->salary_currency) === 'USD')>USD ($)</option>
+                            <option value="EUR" @selected(old('salary_currency', $job->salary_currency) === 'EUR')>EUR (€)</option>
+                            <option value="GBP" @selected(old('salary_currency', $job->salary_currency) === 'GBP')>GBP (£)</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Period</span>
+                        <select name="salary_period">
+                            <option value="monthly" @selected(old('salary_period', $job->salary_period ?: 'monthly') === 'monthly')>Monthly</option>
+                            <option value="yearly" @selected(old('salary_period', $job->salary_period) === 'yearly')>Yearly</option>
+                            <option value="hourly" @selected(old('salary_period', $job->salary_period) === 'hourly')>Hourly</option>
+                        </select>
+                    </label>
+                </div>
+                <label style="margin-top:10px;">
+                    <span style="font-size:12px;" class="muted">Custom Salary Display Label (Optional override)</span>
+                    <input name="salary" value="{{ old('salary', $job->salary) }}" placeholder="e.g. Rs 150,000 - 250,000 / Negotiable">
                 </label>
             </div>
 
@@ -78,18 +112,37 @@
             </div>
 
             <label>
-                <span>Role Description <span style="color:#ef4444">*</span></span>
-                <textarea name="description" placeholder="Describe the role, day-to-day focus, and why candidates should join..." required style="min-height: 140px;">{{ old('description', $job->description) }}</textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span>Role Description <span style="color:#ef4444">*</span></span>
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('description', '**', '**')">𝗕 Bold</button>
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('description', '### ', '')">𝗛 Heading</button>
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('description', '- ', '')">• List</button>
+                    </div>
+                </div>
+                <textarea id="descInput" name="description" placeholder="Describe the role, day-to-day focus, and why candidates should join..." required style="min-height: 140px;">{{ old('description', $job->description) }}</textarea>
             </label>
 
             <label>
-                <span>Requirements & Skills <span style="color:#ef4444">*</span></span>
-                <textarea name="requirements" placeholder="Qualifications, education, experience, and tools required..." required style="min-height: 120px;">{{ old('requirements', $job->requirements) }}</textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span>Requirements & Skills <span style="color:#ef4444">*</span></span>
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('requirements', '**', '**')">𝗕 Bold</button>
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('requirements', '- ', '')">• List</button>
+                    </div>
+                </div>
+                <textarea id="reqInput" name="requirements" placeholder="Qualifications, education, experience, and tools required..." required style="min-height: 120px;">{{ old('requirements', $job->requirements) }}</textarea>
             </label>
 
             <label>
-                <span>Core Responsibilities</span>
-                <textarea name="responsibilities" placeholder="Key responsibilities and expectations..." style="min-height: 120px;">{{ old('responsibilities', $job->responsibilities) }}</textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span>Core Responsibilities</span>
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('responsibilities', '**', '**')">𝗕 Bold</button>
+                        <button type="button" class="btn secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="insertMd('responsibilities', '- ', '')">• List</button>
+                    </div>
+                </div>
+                <textarea id="respInput" name="responsibilities" placeholder="Key responsibilities and expectations..." style="min-height: 120px;">{{ old('responsibilities', $job->responsibilities) }}</textarea>
             </label>
 
             <div style="border-top:1px solid var(--border-color); padding-top:20px; margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
@@ -114,6 +167,17 @@ function toggleOtherCategory(val) {
         label.textContent = 'Sub Category / Specialization';
         input.placeholder = 'e.g. Backend Development, Auditing';
     }
+function insertMd(fieldName, prefix, suffix) {
+    const el = document.querySelector(`textarea[name="${fieldName}"]`);
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = el.value;
+    const selected = text.substring(start, end);
+    const replacement = prefix + (selected || 'sample text') + suffix;
+    el.value = text.substring(0, start) + replacement + text.substring(end);
+    el.focus();
+    el.setSelectionRange(start + prefix.length, start + replacement.length - suffix.length);
 }
 </script>
 @endsection

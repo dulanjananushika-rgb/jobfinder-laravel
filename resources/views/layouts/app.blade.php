@@ -73,6 +73,11 @@
                                     </div>
                                 @endforelse
                             </div>
+                            <div style="padding: 10px; text-align: center; border-top: 1px solid var(--border-light); background: #f8fafc;">
+                                <a href="{{ route('notifications.index') }}" style="font-size: 12.5px; font-weight: 600; color: var(--primary); text-decoration: none;">
+                                    View All Notifications &rarr;
+                                </a>
+                            </div>
                         </div>
                     </div>
 

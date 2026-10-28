@@ -4,10 +4,11 @@ namespace App\Notifications;
 
 use App\Models\Job;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class JobApprovedNotification extends Notification
+class JobApprovedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

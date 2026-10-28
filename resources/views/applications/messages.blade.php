@@ -26,7 +26,7 @@
         </div>
 
         <!-- Messages Scrollable Thread -->
-        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom: 20px; max-height: 380px; padding-right: 6px;">
+        <div id="chatMessagesThread" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:12px; margin-bottom: 20px; max-height: 380px; padding-right: 6px;">
             <!-- Initial Application Pitch Message -->
             <div style="background: #f8fafc; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px 16px;">
                 <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">
@@ -146,4 +146,35 @@
         </div>
     </aside>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const thread = document.getElementById('chatMessagesThread');
+    if (thread) {
+        thread.scrollTop = thread.scrollHeight;
+        
+        // Auto-refresh chat thread every 4 seconds if tab is active
+        setInterval(function() {
+            if (!document.hidden) {
+                fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newThread = doc.getElementById('chatMessagesThread');
+                    if (newThread && newThread.innerHTML !== thread.innerHTML) {
+                        const wasAtBottom = (thread.scrollHeight - thread.scrollTop) <= (thread.clientHeight + 50);
+                        thread.innerHTML = newThread.innerHTML;
+                        if (wasAtBottom) {
+                            thread.scrollTop = thread.scrollHeight;
+                        }
+                    }
+                }).catch(() => {});
+            }
+        }, 4000);
+    }
+});
+</script>
 @endsection

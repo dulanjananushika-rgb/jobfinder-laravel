@@ -16,6 +16,14 @@ class JobController extends Controller
             ->when($request->filled('category'), fn ($query) => $query->where('main_category', $request->category))
             ->when($request->filled('type'), fn ($query) => $query->whereIn('type', (array) $request->type))
             ->when($request->filled('experience'), fn ($query) => $query->where('requirements', 'like', '%'.$request->experience.'%'))
+            ->when($request->filled('min_salary'), fn ($query) => $query->where(function ($q) use ($request) {
+                $q->where('min_salary', '>=', (float) $request->min_salary)
+                  ->orWhere('max_salary', '>=', (float) $request->min_salary);
+            }))
+            ->when($request->filled('max_salary'), fn ($query) => $query->where(function ($q) use ($request) {
+                $q->where('max_salary', '<=', (float) $request->max_salary)
+                  ->orWhere('min_salary', '<=', (float) $request->max_salary);
+            }))
             ->orderByDesc('is_featured')
             ->when($request->get('sort') === 'oldest', fn ($query) => $query->oldest(), fn ($query) => $query->latest())
             ->paginate(9)

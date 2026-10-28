@@ -4,19 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Job extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'employer_id',
         'title',
+        'slug',
         'main_category',
         'sub_category',
         'location',
         'type',
         'salary',
+        'min_salary',
+        'max_salary',
+        'salary_currency',
+        'salary_period',
         'description',
         'requirements',
         'responsibilities',
@@ -38,7 +45,43 @@ class Job extends Model
             'is_featured' => 'boolean',
             'featured_until' => 'datetime',
             'views_count' => 'integer',
+            'min_salary' => 'decimal:2',
+            'max_salary' => 'decimal:2',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Job $job) {
+            if (empty($job->slug) && ! empty($job->title)) {
+                $baseSlug = Str::slug($job->title);
+                $slug = $baseSlug;
+                $counter = 1;
+                while (static::where('slug', $slug)->where('id', '!=', $job->id ?? 0)->exists()) {
+                    $slug = $baseSlug . '-' . $counter++;
+                }
+                $job->slug = $slug;
+            }
+        });
+    }
+
+    public function getFormattedSalaryAttribute(): string
+    {
+        if ($this->min_salary && $this->max_salary) {
+            return $this->salary_currency . ' ' . number_format($this->min_salary) . ' - ' . number_format($this->max_salary) . ' / ' . $this->salary_period;
+        } elseif ($this->min_salary) {
+            return 'From ' . $this->salary_currency . ' ' . number_format($this->min_salary) . ' / ' . $this->salary_period;
+        } elseif ($this->salary) {
+            return $this->salary;
+        }
+        return 'Negotiable';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('id', $value)
+            ->orWhere('slug', $value)
+            ->firstOrFail();
     }
 
     public function employer()

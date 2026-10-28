@@ -46,6 +46,7 @@
                     <input style="width:15px; height:15px; min-height:auto;" type="checkbox" name="remember" value="1">
                     <span>Remember me</span>
                 </label>
+                <a href="{{ route('password.request') }}" style="color:var(--primary); font-weight:500; text-decoration:none;">Forgot password?</a>
             </div>
 
             <button class="btn" style="width:100%;" type="submit">Sign In</button>

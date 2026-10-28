@@ -135,10 +135,19 @@ class ApplicationController extends Controller
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['pending', 'reviewed', 'shortlisted', 'interview', 'hired', 'rejected'])],
+            'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $previousStatus = $application->status;
-        $application->update($data);
+        $application->update(['status' => $data['status']]);
+
+        // Record status change in audit log
+        $application->statusHistories()->create([
+            'changed_by_user_id' => auth()->id(),
+            'from_status' => $previousStatus,
+            'to_status' => $data['status'],
+            'notes' => $data['notes'] ?? null,
+        ]);
 
         $application->load('job.employer', 'jobSeeker');
 

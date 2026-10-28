@@ -32,7 +32,7 @@
             <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:14px;">
                 <div class="muted" style="font-size:11.5px; font-weight:600; text-transform:uppercase;">Compensation</div>
                 <div style="font-family:var(--font-heading); font-size:15px; font-weight:700; color:var(--primary); margin-top:3px;">
-                    {{ $job->salary ?: 'Negotiable' }}
+                    {{ $job->formatted_salary }}
                 </div>
             </div>
 
@@ -52,18 +52,18 @@
         </div>
 
         <h2 style="font-size:18px; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:12px;">Position Summary</h2>
-        <div style="line-height:1.7; margin-bottom:24px; font-size:14px;">
-            {!! nl2br(e($job->description)) !!}
+        <div class="job-richtext" style="line-height:1.7; margin-bottom:24px; font-size:14px;">
+            {!! \Illuminate\Support\Str::markdown($job->description, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
         </div>
 
         <h2 style="font-size:18px; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:12px;">Key Responsibilities</h2>
-        <div style="line-height:1.7; margin-bottom:24px; font-size:14px;">
-            {!! nl2br(e($job->responsibilities ?: 'Responsibilities will be discussed during initial interview.')) !!}
+        <div class="job-richtext" style="line-height:1.7; margin-bottom:24px; font-size:14px;">
+            {!! \Illuminate\Support\Str::markdown($job->responsibilities ?: 'Responsibilities will be discussed during initial interview.', ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
         </div>
 
         <h2 style="font-size:18px; border-bottom:1px solid var(--border-light); padding-bottom:8px; margin-bottom:12px;">Qualifications & Requirements</h2>
-        <div style="line-height:1.7; font-size:14px;">
-            {!! nl2br(e($job->requirements)) !!}
+        <div class="job-richtext" style="line-height:1.7; font-size:14px;">
+            {!! \Illuminate\Support\Str::markdown($job->requirements, ['html_input' => 'strip', 'allow_unsafe_links' => false]) !!}
         </div>
     </section>
 

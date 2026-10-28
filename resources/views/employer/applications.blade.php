@@ -86,6 +86,14 @@
                                 📅 {{ $application->interview->scheduled_at->format('M d, h:i A') }}
                             </div>
                         @endif
+                        @if($application->statusHistories->isNotEmpty())
+                            <div class="muted" style="font-size: 10.5px; margin-top: 3px;">
+                                🕒 {{ $application->statusHistories->first()->created_at->diffForHumans() }}
+                                @if($application->statusHistories->first()->notes)
+                                    <div style="font-style: italic; color: #64748b; font-size:10px;">"{{ Str::limit($application->statusHistories->first()->notes, 30) }}"</div>
+                                @endif
+                            </div>
+                        @endif
                     </td>
                     <td>
                         <a class="btn secondary btn-sm" href="{{ route('applications.resume', $application) }}" target="_blank">

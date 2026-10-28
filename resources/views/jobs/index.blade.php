@@ -78,6 +78,14 @@
                 </div>
             </div>
 
+            <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 12px; margin-bottom: 6px;">
+                <strong style="font-size:13.5px; color:var(--text-heading);">Monthly Salary (Rs)</strong>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:8px;">
+                    <input type="number" step="10000" name="min_salary" placeholder="Min Rs" value="{{ request('min_salary') }}" style="min-height:34px; font-size:12.5px; padding:4px 8px;">
+                    <input type="number" step="10000" name="max_salary" placeholder="Max Rs" value="{{ request('max_salary') }}" style="min-height:34px; font-size:12.5px; padding:4px 8px;">
+                </div>
+            </div>
+
             <div style="margin-bottom: 6px;">
                 <label>
                     <span>Industry Category</span>

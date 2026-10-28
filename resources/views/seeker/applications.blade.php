@@ -59,6 +59,13 @@
                             <div class="muted" style="font-size:11.5px; margin-top:2px;">
                                 Withdrawn {{ $application->withdrawn_at->format('M d, Y') }}
                             </div>
+                        @elseif($application->statusHistories->isNotEmpty())
+                            <div class="muted" style="font-size:11px; margin-top:3px;">
+                                Updated {{ $application->statusHistories->first()->created_at->diffForHumans() }}
+                                @if($application->statusHistories->first()->notes)
+                                    <div style="font-style:italic; color:#475569;">"{{ Str::limit($application->statusHistories->first()->notes, 40) }}"</div>
+                                @endif
+                            </div>
                         @endif
                     </td>
                     <td>

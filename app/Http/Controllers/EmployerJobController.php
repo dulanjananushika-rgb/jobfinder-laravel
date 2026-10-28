@@ -65,18 +65,34 @@ class EmployerJobController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'main_category' => ['required', 'string', 'max:100'],
             'sub_category' => ['nullable', 'string', 'max:100'],
             'location' => ['required', 'string', 'max:100'],
             'type' => ['required', 'string', 'max:100'],
             'salary' => ['nullable', 'string', 'max:100'],
+            'min_salary' => ['nullable', 'numeric', 'min:0'],
+            'max_salary' => ['nullable', 'numeric', 'gte:min_salary'],
+            'salary_currency' => ['nullable', 'string', 'max:10'],
+            'salary_period' => ['nullable', 'string', 'in:monthly,yearly,hourly,weekly'],
             'description' => ['required', 'string', 'min:20'],
             'requirements' => ['required', 'string', 'min:10'],
             'responsibilities' => ['nullable', 'string'],
             'deadline' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
+
+        if (empty($validated['salary']) && (! empty($validated['min_salary']) || ! empty($validated['max_salary']))) {
+            $currency = $validated['salary_currency'] ?? 'LKR';
+            $period = $validated['salary_period'] ?? 'monthly';
+            if (! empty($validated['min_salary']) && ! empty($validated['max_salary'])) {
+                $validated['salary'] = "{$currency} " . number_format($validated['min_salary']) . " - " . number_format($validated['max_salary']) . " / {$period}";
+            } elseif (! empty($validated['min_salary'])) {
+                $validated['salary'] = "From {$currency} " . number_format($validated['min_salary']) . " / {$period}";
+            }
+        }
+
+        return $validated;
     }
 
     private function formOptions(Job $job): array

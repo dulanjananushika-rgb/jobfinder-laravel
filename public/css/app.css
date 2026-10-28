@@ -1055,3 +1055,22 @@ tbody tr:hover {
         right: -40px;
     }
 }
+
+/* ==========================================================================
+   Job Rich Text Rendering
+   ========================================================================== */
+.job-richtext p {
+    margin-bottom: 0.75rem;
+}
+.job-richtext ul, .job-richtext ol {
+    margin: 0.5rem 0 0.85rem 1.25rem;
+    padding-left: 0.5rem;
+}
+.job-richtext li {
+    margin-bottom: 0.35rem;
+}
+.job-richtext h1, .job-richtext h2, .job-richtext h3, .job-richtext h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-heading);
+}
