@@ -8,15 +8,15 @@
                 @php $isSaved = auth()->user()->savedJobs()->where('job_id', $job->id)->exists(); @endphp
                 <form method="post" action="{{ route('jobs.save', $job) }}">
                     @csrf
-                    <button class="btn ghost" style="font-size:18px; color: {{ $isSaved ? '#ef4444' : '#94a3b8' }};" title="{{ $isSaved ? 'Unsave job' : 'Save job' }}">
+                    <button class="btn ghost" style="font-size:17px; color: {{ $isSaved ? '#ef4444' : '#94a3b8' }};" title="{{ $isSaved ? 'Remove bookmark' : 'Bookmark job' }}">
                         {{ $isSaved ? '♥' : '♡' }}
                     </button>
                 </form>
             @else
-                <span class="muted" style="font-size:18px">♡</span>
+                <span class="muted" style="font-size:17px">♡</span>
             @endif
         @else
-            <a href="{{ route('login') }}" class="muted" style="font-size:18px" title="Login to save">♡</a>
+            <a href="{{ route('login') }}" class="muted" style="font-size:17px" title="Sign in to bookmark">♡</a>
         @endauth
     </div>
 
@@ -34,17 +34,17 @@
     </div>
 
     <div class="actions">
-        <span class="badge blue">{{ $job->main_category }}</span>
-        <span class="badge green">{{ $job->type }}</span>
+        <span class="badge emerald">{{ $job->main_category }}</span>
+        <span class="badge blue">{{ $job->type }}</span>
         @if($job->sub_category)
-            <span class="badge peach">{{ $job->sub_category }}</span>
+            <span class="badge gray">{{ $job->sub_category }}</span>
         @endif
     </div>
 
     <p class="job-desc-snippet">{{ \Illuminate\Support\Str::limit($job->description, 115) }}</p>
 
     <div class="job-card-footer">
-        <div class="job-salary-tag">{{ $job->salary ?: 'Salary Negotiable' }}</div>
+        <div class="job-salary-tag">{{ $job->salary ?: 'Negotiable' }}</div>
         <div class="muted" style="font-size: 12px;">{{ $job->created_at->diffForHumans() }}</div>
     </div>
 </article>

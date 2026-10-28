@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'JobFinder - Sri Lanka Job Portal')</title>
+    <title>@yield('title', 'JobFinder - Sri Lanka Career Network')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
@@ -11,30 +11,30 @@
     <header class="topbar">
         <div class="nav-container">
             <a class="brand" href="{{ route('home') }}">
-                <span class="brand-mark">JF</span>
-                <span>Job<span class="brand-text-accent">Finder</span></span>
+                <span class="brand-icon-box">💼</span>
+                <span>Job<span class="brand-text-highlight">Finder</span></span>
             </a>
 
             <nav class="nav-links">
                 <a class="nav-link {{ request()->routeIs('jobs.*') ? 'active' : '' }}" href="{{ route('jobs.index') }}">Find Jobs</a>
-                <a class="nav-link {{ request()->routeIs('companies') ? 'active' : '' }}" href="{{ route('companies') }}">Find Talent</a>
+                <a class="nav-link {{ request()->routeIs('companies') ? 'active' : '' }}" href="{{ route('companies') }}">Browse Employers</a>
                 @auth
                     @if(auth()->user()->isEmployer())
-                        <a class="nav-link" href="{{ auth()->user()->isVerifiedEmployer() ? route('employer.jobs.create') : route('dashboard') }}">Post a Job</a>
-                        <a class="nav-link {{ request()->routeIs('employer.applications.*') ? 'active' : '' }}" href="{{ route('employer.applications.index') }}">Candidates</a>
+                        <a class="nav-link {{ request()->routeIs('employer.jobs.*') ? 'active' : '' }}" href="{{ auth()->user()->isVerifiedEmployer() ? route('employer.jobs.create') : route('dashboard') }}">Post Vacancy</a>
+                        <a class="nav-link {{ request()->routeIs('employer.applications.*') ? 'active' : '' }}" href="{{ route('employer.applications.index') }}">Review Applicants</a>
                     @endif
                     @if(auth()->user()->isJobSeeker())
                         <a class="nav-link {{ request()->routeIs('seeker.applications') ? 'active' : '' }}" href="{{ route('seeker.applications') }}">My Applications</a>
-                        <a class="nav-link {{ request()->routeIs('seeker.saved-jobs') ? 'active' : '' }}" href="{{ route('seeker.saved-jobs') }}">Saved Jobs</a>
+                        <a class="nav-link {{ request()->routeIs('seeker.saved-jobs') ? 'active' : '' }}" href="{{ route('seeker.saved-jobs') }}">Saved Vacancies</a>
                     @endif
                     @if(auth()->user()->isAdmin())
                         <a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}" href="{{ route('admin.users') }}">Users</a>
-                        <a class="nav-link {{ request()->routeIs('admin.jobs*') ? 'active' : '' }}" href="{{ route('admin.jobs') }}">Jobs</a>
+                        <a class="nav-link {{ request()->routeIs('admin.jobs*') ? 'active' : '' }}" href="{{ route('admin.jobs') }}">Moderate Jobs</a>
                         <a class="nav-link {{ request()->routeIs('admin.applications*') ? 'active' : '' }}" href="{{ route('admin.applications') }}">Applications</a>
-                        <a class="nav-link {{ request()->routeIs('admin.messages*') ? 'active' : '' }}" href="{{ route('admin.messages') }}">Messages</a>
+                        <a class="nav-link {{ request()->routeIs('admin.messages*') ? 'active' : '' }}" href="{{ route('admin.messages') }}">Inquiries</a>
                     @endif
                 @else
-                    <a class="nav-link" href="{{ route('register') }}">Post a Job</a>
+                    <a class="nav-link" href="{{ route('register') }}">Post a Vacancy</a>
                 @endauth
                 <a class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ route('about') }}">About</a>
                 <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">Contact</a>
@@ -44,8 +44,8 @@
                 @auth
                     <!-- In-App Notification Center -->
                     <div class="notif-wrapper">
-                        <button type="button" class="notif-bell-btn" id="notifBellBtn" title="Notifications">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <button type="button" class="notif-bell-btn" id="notifBellBtn" title="View Notifications">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                             @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
                             @if($unreadCount > 0)
                                 <span class="notif-badge-count">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
@@ -83,10 +83,10 @@
                     <a class="btn secondary btn-sm" href="{{ route('dashboard') }}">Dashboard</a>
                     <form method="post" action="{{ route('logout') }}" style="display:inline">
                         @csrf
-                        <button class="btn ghost btn-sm" style="color:#94a3b8">Logout</button>
+                        <button class="btn ghost btn-sm" style="color:var(--text-muted)">Logout</button>
                     </form>
                 @else
-                    <a class="btn ghost btn-sm" style="color:#ffffff" href="{{ route('login') }}">Sign In</a>
+                    <a class="btn ghost btn-sm" href="{{ route('login') }}">Sign In</a>
                     <a class="btn btn-sm" href="{{ route('register') }}">Create Account</a>
                 @endauth
 
@@ -99,40 +99,40 @@
     <!-- Mobile Drawer & Backdrop -->
     <div class="mobile-backdrop" id="mobileBackdrop"></div>
     <div class="mobile-drawer" id="mobileDrawer">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border-light);">
             <div class="brand">
-                <span class="brand-mark">JF</span>
-                <span>Job<span class="brand-text-accent">Finder</span></span>
+                <span class="brand-icon-box">💼</span>
+                <span>Job<span class="brand-text-highlight">Finder</span></span>
             </div>
-            <button type="button" id="closeDrawerBtn" style="background:none; border:none; color:#ffffff; font-size:22px; cursor:pointer;">✕</button>
+            <button type="button" id="closeDrawerBtn" style="background:none; border:none; color:var(--text-heading); font-size:20px; cursor:pointer;">✕</button>
         </div>
 
-        <nav style="display:flex; flex-direction:column; gap:8px;">
+        <nav style="display:flex; flex-direction:column; gap:6px;">
             <a class="nav-link" href="{{ route('home') }}">Home</a>
             <a class="nav-link" href="{{ route('jobs.index') }}">Browse Jobs</a>
-            <a class="nav-link" href="{{ route('companies') }}">Browse Companies</a>
+            <a class="nav-link" href="{{ route('companies') }}">Browse Employers</a>
             @auth
                 <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
                 @if(auth()->user()->isEmployer())
-                    <a class="nav-link" href="{{ route('employer.jobs.index') }}">Manage Jobs</a>
-                    <a class="nav-link" href="{{ route('employer.applications.index') }}">Review Applicants</a>
+                    <a class="nav-link" href="{{ route('employer.jobs.index') }}">My Job Postings</a>
+                    <a class="nav-link" href="{{ route('employer.applications.index') }}">Candidate Resumes</a>
                 @endif
                 @if(auth()->user()->isJobSeeker())
                     <a class="nav-link" href="{{ route('seeker.applications') }}">My Applications</a>
-                    <a class="nav-link" href="{{ route('seeker.saved-jobs') }}">Saved Jobs</a>
+                    <a class="nav-link" href="{{ route('seeker.saved-jobs') }}">Saved Vacancies</a>
                 @endif
                 @if(auth()->user()->isAdmin())
-                    <a class="nav-link" href="{{ route('admin.users') }}">Users Management</a>
-                    <a class="nav-link" href="{{ route('admin.jobs') }}">Jobs Moderation</a>
+                    <a class="nav-link" href="{{ route('admin.users') }}">User Management</a>
+                    <a class="nav-link" href="{{ route('admin.jobs') }}">Job Moderation</a>
                     <a class="nav-link" href="{{ route('admin.applications') }}">All Applications</a>
                 @endif
                 <a class="nav-link" href="{{ route('profile.edit') }}">Profile Settings</a>
-                <form method="post" action="{{ route('logout') }}" style="margin-top:12px;">
+                <form method="post" action="{{ route('logout') }}" style="margin-top:10px;">
                     @csrf
-                    <button class="btn danger btn-sm" style="width:100%">Logout</button>
+                    <button class="btn danger btn-sm" style="width:100%">Sign Out</button>
                 </form>
             @else
-                <a class="btn btn-sm" style="margin-top:12px; width:100%;" href="{{ route('login') }}">Sign In</a>
+                <a class="btn btn-sm" style="margin-top:10px; width:100%;" href="{{ route('login') }}">Sign In</a>
                 <a class="btn secondary btn-sm" style="width:100%;" href="{{ route('register') }}">Create Account</a>
             @endauth
         </nav>
@@ -153,7 +153,7 @@
 
             @if ($errors->any())
                 <div class="errors">
-                    <strong>Please check the following:</strong>
+                    <strong>Please review the following:</strong>
                     <ul>
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -169,11 +169,11 @@
     <footer class="footer">
         <div class="footer-inner">
             <div>
-                <strong>JobFinder.lk</strong> &copy; {{ date('Y') }} &middot; Verified Sri Lanka Employment Network
+                <strong>JobFinder.lk</strong> &copy; {{ date('Y') }} &middot; Sri Lanka's Verified Employment Portal
             </div>
             <div class="footer-links">
-                <a href="{{ route('privacy') }}">Privacy</a>
-                <a href="{{ route('terms') }}">Terms</a>
+                <a href="{{ route('privacy') }}">Privacy Policy</a>
+                <a href="{{ route('terms') }}">Terms of Service</a>
                 <a href="{{ route('career-advice') }}">Career Advice</a>
                 <a href="{{ route('resume-tips') }}">Resume Tips</a>
                 <a href="{{ route('interview-tips') }}">Interview Tips</a>

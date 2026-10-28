@@ -1,26 +1,26 @@
 @extends('layouts.app')
-@section('title', 'Browse Verified Jobs in Sri Lanka - JobFinder')
+@section('title', 'Browse Verified Jobs - JobFinder.lk')
 
 @section('hero')
 <section class="hero">
     <div class="hero-content">
-        <div class="hero-pill">
-            <span>✦</span>
-            <span>Live Opportunities</span>
+        <div class="hero-eyebrow">
+            <span>🔍</span>
+            <span>Explore Vacancies</span>
         </div>
-        <h1>Browse Jobs Across <span class="hero-gradient-text">Sri Lanka</span></h1>
-        <p class="hero-subtitle">Filter by industry, location, job type, and experience level to find your ideal role.</p>
+        <h1>Browse Jobs in <span class="hero-emerald-text">Sri Lanka</span></h1>
+        <p class="hero-subtitle">Filter by industry, location, job type, and experience level to find your next opportunity.</p>
 
         <form class="hero-search" method="get" action="{{ route('jobs.index') }}">
-            <div class="search-input-group">
-                <span class="search-icon">🔍</span>
-                <input name="search" placeholder="Job title, skill, or company" value="{{ request('search') }}">
+            <div class="search-field-box">
+                <span class="search-field-icon">🔍</span>
+                <input name="search" placeholder="Job title, skill, or employer" value="{{ request('search') }}">
             </div>
-            <div class="search-input-group">
-                <span class="search-icon">📍</span>
+            <div class="search-field-box">
+                <span class="search-field-icon">📍</span>
                 <input name="location" placeholder="District or Remote" value="{{ request('location') }}">
             </div>
-            <button class="btn" type="submit">Search</button>
+            <button class="btn" type="submit">Filter Jobs</button>
         </form>
     </div>
 </section>
@@ -29,8 +29,8 @@
 @section('content')
 <div class="section-head">
     <div>
-        <h2>Verified Vacancies</h2>
-        <p class="muted" style="margin:0">Displaying {{ $jobs->total() }} available positions.</p>
+        <h2>Available Vacancies</h2>
+        <p class="muted" style="margin:0">Showing {{ $jobs->total() }} verified openings.</p>
     </div>
     <form method="get" class="actions">
         @foreach(request()->except('sort','page') as $key => $value)
@@ -40,7 +40,7 @@
                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
             @endif
         @endforeach
-        <select name="sort" onchange="this.form.submit()" style="min-height:38px; padding:6px 12px; font-size:13px;">
+        <select name="sort" onchange="this.form.submit()" style="min-height:36px; padding:4px 10px; font-size:13px; width:auto;">
             <option value="recent" @selected(request('sort') !== 'oldest')>Sort: Most Recent</option>
             <option value="oldest" @selected(request('sort') === 'oldest')>Sort: Oldest</option>
         </select>
@@ -54,9 +54,9 @@
                 <input type="hidden" name="search" value="{{ request('search') }}">
             @endif
 
-            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 8px;">
-                <strong style="font-size:14px; color:var(--text-primary);">Job Type</strong>
-                <div style="margin-top: 8px;">
+            <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 12px; margin-bottom: 6px;">
+                <strong style="font-size:13.5px; color:var(--text-heading);">Employment Type</strong>
+                <div style="margin-top: 6px;">
                     @foreach($types as $type)
                         <label class="checkbox-row">
                             <span>{{ $type }}</span>
@@ -66,9 +66,9 @@
                 </div>
             </div>
 
-            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 8px;">
-                <strong style="font-size:14px; color:var(--text-primary);">Experience Level</strong>
-                <div style="margin-top: 8px;">
+            <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 12px; margin-bottom: 6px;">
+                <strong style="font-size:13.5px; color:var(--text-heading);">Experience Level</strong>
+                <div style="margin-top: 6px;">
                     @foreach(['Entry', 'Intermediate', 'Expert'] as $experience)
                         <label class="checkbox-row">
                             <span>{{ $experience }} Level</span>
@@ -78,7 +78,7 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 8px;">
+            <div style="margin-bottom: 6px;">
                 <label>
                     <span>Industry Category</span>
                     <select name="category">
@@ -90,7 +90,7 @@
                 </label>
             </div>
 
-            <div style="margin-bottom: 14px;">
+            <div style="margin-bottom: 12px;">
                 <label>
                     <span>District / Location</span>
                     <select name="location">
@@ -115,13 +115,13 @@
                 @include('jobs.partials.card', ['job' => $job])
             @empty
                 <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 48px;">
-                    <p class="muted">No vacancies found matching your criteria. Try adjusting your filters.</p>
-                    <a class="btn secondary btn-sm" style="margin-top: 14px;" href="{{ route('jobs.index') }}">Clear All Filters</a>
+                    <p class="muted">No vacancies found matching your criteria.</p>
+                    <a class="btn secondary btn-sm" style="margin-top: 12px;" href="{{ route('jobs.index') }}">Clear Filters</a>
                 </div>
             @endforelse
         </section>
 
-        <div style="margin-top: 32px;">
+        <div style="margin-top: 28px;">
             {{ $jobs->links() }}
         </div>
     </div>
