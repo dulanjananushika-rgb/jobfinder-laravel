@@ -1,20 +1,82 @@
 @extends('layouts.app')
-@section('title', 'Admin Applications')
+@section('title', 'All Platform Applications - Admin Moderation')
+
 @section('content')
-<h1>All Applications</h1>
-<div class="card">
-<table><thead><tr><th>Applicant</th><th>Job</th><th>Employer</th><th>Status</th><th>Resume</th><th>Cover Letter</th></tr></thead><tbody>
-@forelse($applications as $application)
-<tr>
-    <td><a href="{{ route('admin.users.show', $application->jobSeeker) }}">{{ $application->jobSeeker->name }}</a><br><span class="muted">{{ $application->jobSeeker->email }}</span></td>
-    <td><a href="{{ route('jobs.show', $application->job) }}">{{ $application->job->title }}</a></td>
-    <td>{{ $application->job->employer->company_name ?: $application->job->employer->name }}</td>
-    <td><span class="badge">{{ $application->status }}</span><br><span class="muted">{{ $application->created_at->format('M d, Y') }}</span></td>
-    <td><a href="{{ asset('storage/'.$application->resume_path) }}" target="_blank">Download</a></td>
-    <td>{{ \Illuminate\Support\Str::limit($application->cover_letter, 120) }}</td>
-</tr>
-@empty <tr><td colspan="6">No applications found.</td></tr> @endforelse
-</tbody></table>
+<div class="section-head">
+    <div>
+        <h1>Platform Applications</h1>
+        <p class="muted" style="margin:0">System-wide candidate submissions and resume verification.</p>
+    </div>
 </div>
-{{ $applications->links() }}
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Target Vacancy</th>
+                    <th>Employer</th>
+                    <th>Status</th>
+                    <th>Secure Resume</th>
+                    <th>Cover Letter</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($applications as $application)
+                @php
+                    $badgeClass = match($application->status) {
+                        'hired' => 'green',
+                        'interview' => 'peach',
+                        'shortlisted' => 'purple',
+                        'reviewed' => 'blue',
+                        'rejected', 'withdrawn' => 'red',
+                        default => 'peach',
+                    };
+                @endphp
+                <tr>
+                    <td>
+                        <a href="{{ route('admin.users.show', $application->jobSeeker) }}" style="font-weight:700; color:var(--brand-primary);">
+                            {{ $application->jobSeeker->name }}
+                        </a>
+                        <div class="muted" style="font-size:12px;">{{ $application->jobSeeker->email }}</div>
+                    </td>
+                    <td>
+                        <a href="{{ route('jobs.show', $application->job) }}" style="font-weight:600;">
+                            {{ $application->job->title }}
+                        </a>
+                    </td>
+                    <td>
+                        <strong>{{ $application->job->employer->company_name ?: $application->job->employer->name }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge {{ $badgeClass }}">{{ ucfirst($application->status) }}</span>
+                        <div class="muted" style="font-size:11.5px; margin-top:2px;">{{ $application->created_at->format('M d, Y') }}</div>
+                    </td>
+                    <td>
+                        <a class="btn secondary btn-sm" href="{{ route('applications.resume', $application) }}" target="_blank">
+                            📄 Download
+                        </a>
+                    </td>
+                    <td>
+                        <div style="max-width: 260px; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
+                            {{ \Illuminate\Support\Str::limit($application->cover_letter, 120) }}
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 48px;">
+                        <p class="muted">No applications recorded in the system.</p>
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 24px;">
+    {{ $applications->links() }}
+</div>
 @endsection

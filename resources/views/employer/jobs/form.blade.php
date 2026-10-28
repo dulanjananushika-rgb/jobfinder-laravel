@@ -1,38 +1,102 @@
 @extends('layouts.app')
-@section('title', $job->exists ? 'Edit Job' : 'Post Job')
+@section('title', $job->exists ? 'Edit Vacancy - Employer Portal' : 'Post New Vacancy - Employer Portal')
+
 @section('content')
-<div class="card">
-<h1>{{ $job->exists ? 'Edit Job' : 'Post Job' }}</h1>
-<form class="form" method="post" action="{{ $job->exists ? route('employer.jobs.update', $job) : route('employer.jobs.store') }}">
-    @csrf @if($job->exists) @method('PUT') @endif
-    <div class="grid grid-2">
-        <label>Title <input name="title" value="{{ old('title', $job->title) }}" required></label>
-        <label>Main Category
-            <select name="main_category" required>
-                <option value="">Select a category</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category }}" @selected(old('main_category', $job->main_category) === $category)>{{ $category }}</option>
-                @endforeach
-            </select>
-        </label>
-        <label>Sub Category <input name="sub_category" value="{{ old('sub_category', $job->sub_category) }}"></label>
-        <label>Location
-            <select name="location" required>
-                <option value="">Select a district</option>
-                @foreach($locations as $location)
-                    <option value="{{ $location }}" @selected(old('location', $job->location) === $location)>{{ $location }}</option>
-                @endforeach
-            </select>
-        </label>
-        <label>Type <input name="type" value="{{ old('type', $job->type) }}" placeholder="Full-time" required></label>
-        <label>Salary <input name="salary" value="{{ old('salary', $job->salary) }}"></label>
-        <label>Deadline <input type="date" name="deadline" value="{{ old('deadline', optional($job->deadline)->format('Y-m-d')) }}"></label>
+<div style="max-width: 860px; margin: 0 auto;">
+    <div style="margin-bottom: 20px;">
+        <a href="{{ route('employer.jobs.index') }}" class="btn ghost btn-sm" style="padding-left:0;">← Back to My Job Postings</a>
     </div>
-    <p class="muted">New or edited jobs are submitted to admin for approval before they become public.</p>
-    <label>Description <textarea name="description" required>{{ old('description', $job->description) }}</textarea></label>
-    <label>Requirements <textarea name="requirements" required>{{ old('requirements', $job->requirements) }}</textarea></label>
-    <label>Responsibilities <textarea name="responsibilities">{{ old('responsibilities', $job->responsibilities) }}</textarea></label>
-    <button class="btn">{{ $job->exists ? 'Update Job' : 'Post Job' }}</button>
-</form>
+
+    <div class="card" style="padding: 36px;">
+        <div class="actions" style="margin-bottom: 12px;">
+            <span class="badge blue">Employer Portal</span>
+            @if($job->exists)
+                <span class="badge peach">Status: Pending Re-Approval</span>
+            @endif
+        </div>
+
+        <h1 style="font-size: 26px; margin-bottom: 6px;">{{ $job->exists ? 'Edit Vacancy Listing' : 'Post a New Vacancy' }}</h1>
+        <p class="muted" style="margin-bottom: 28px;">
+            Provide complete role criteria and requirements. Once submitted, our admin team reviews and publishes the listing.
+        </p>
+
+        <form class="form" method="post" action="{{ $job->exists ? route('employer.jobs.update', $job) : route('employer.jobs.store') }}">
+            @csrf
+            @if($job->exists)
+                @method('PUT')
+            @endif
+
+            <div class="grid grid-2">
+                <label style="grid-column: 1 / -1;">
+                    <span>Job Title <span style="color:#ef4444">*</span></span>
+                    <input name="title" value="{{ old('title', $job->title) }}" placeholder="e.g. Senior Laravel Developer, Assistant Accountant" required>
+                </label>
+
+                <label>
+                    <span>Industry / Category <span style="color:#ef4444">*</span></span>
+                    <select name="main_category" required>
+                        <option value="">Select an industry</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category }}" @selected(old('main_category', $job->main_category) === $category)>{{ $category }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label>
+                    <span>Sub Category / Specialization</span>
+                    <input name="sub_category" value="{{ old('sub_category', $job->sub_category) }}" placeholder="e.g. Backend Development, Auditing">
+                </label>
+
+                <label>
+                    <span>District / Location <span style="color:#ef4444">*</span></span>
+                    <select name="location" required>
+                        <option value="">Select a Sri Lankan district</option>
+                        @foreach($locations as $location)
+                            <option value="{{ $location }}" @selected(old('location', $job->location) === $location)>{{ $location }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                <label>
+                    <span>Employment Type <span style="color:#ef4444">*</span></span>
+                    <input name="type" value="{{ old('type', $job->type ?: 'Full-time') }}" placeholder="Full-time, Part-time, Contract, Remote" required>
+                </label>
+
+                <label>
+                    <span>Salary / Compensation</span>
+                    <input name="salary" value="{{ old('salary', $job->salary) }}" placeholder="e.g. Rs 150,000 - 250,000 / Negotiable">
+                </label>
+
+                <label>
+                    <span>Application Deadline</span>
+                    <input type="date" name="deadline" value="{{ old('deadline', optional($job->deadline)->format('Y-m-d')) }}">
+                </label>
+            </div>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 16px; font-size:13px; color:#1d4ed8; margin: 8px 0;">
+                ℹ️ <strong>Security note:</strong> For platform integrity, new job listings and edits to existing jobs are reviewed by administrators before becoming visible to the public.
+            </div>
+
+            <label>
+                <span>Role Description <span style="color:#ef4444">*</span></span>
+                <textarea name="description" placeholder="Describe the role, day-to-day focus, and why candidates should join..." required style="min-height: 140px;">{{ old('description', $job->description) }}</textarea>
+            </label>
+
+            <label>
+                <span>Requirements & Skills <span style="color:#ef4444">*</span></span>
+                <textarea name="requirements" placeholder="Qualifications, education, experience, and tools required..." required style="min-height: 120px;">{{ old('requirements', $job->requirements) }}</textarea>
+            </label>
+
+            <label>
+                <span>Core Responsibilities</span>
+                <textarea name="responsibilities" placeholder="Key responsibilities and expectations..." style="min-height: 120px;">{{ old('responsibilities', $job->responsibilities) }}</textarea>
+            </label>
+
+            <div style="border-top:1px solid var(--border-color); padding-top:20px; margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                <a href="{{ route('employer.jobs.index') }}" class="btn secondary">Cancel</a>
+                <button class="btn" type="submit">{{ $job->exists ? 'Update Vacancy →' : 'Publish Vacancy →' }}</button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

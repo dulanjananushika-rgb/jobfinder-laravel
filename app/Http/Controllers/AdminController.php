@@ -135,6 +135,14 @@ class AdminController extends Controller
 
         $job->update($data);
 
+        if ($data['status'] === 'active' && $job->employer) {
+            $job->employer->notify(new \App\Notifications\JobApprovedNotification($job));
+            \App\Services\SmsService::send(
+                $job->employer->phone,
+                "JobFinder Alert: Your job '{$job->title}' has been approved and is now live."
+            );
+        }
+
         return back()->with('status', 'Job updated.');
     }
 

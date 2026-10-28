@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use App\Models\JobApplication;
+use App\Notifications\ApplicationStatusUpdatedNotification;
+use App\Notifications\ApplicationSubmittedNotification;
+use App\Notifications\NewApplicationReceivedNotification;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ApplicationController extends Controller
@@ -29,7 +34,8 @@ class ApplicationController extends Controller
             'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
         ]);
 
-        $path = $data['resume']->store('resumes', 'public');
+        // Secure Storage: stored in private disk to prevent unauthenticated direct URL access
+        $path = $data['resume']->store('resumes', 'local');
 
         $application = auth()->user()->applications()->create([
             'job_id' => $job->id,
@@ -37,6 +43,25 @@ class ApplicationController extends Controller
             'resume_path' => $path,
             'status' => 'pending',
         ]);
+
+        $application->load('job.employer', 'jobSeeker');
+
+        // Email & In-App Notifications
+        if ($application->jobSeeker) {
+            $application->jobSeeker->notify(new ApplicationSubmittedNotification($application));
+            SmsService::send(
+                $application->jobSeeker->phone,
+                "JobFinder: Your application for '{$job->title}' has been submitted successfully."
+            );
+        }
+
+        if ($job->employer) {
+            $job->employer->notify(new NewApplicationReceivedNotification($application));
+            SmsService::send(
+                $job->employer->phone,
+                "JobFinder Alert: New application received for '{$job->title}' from {$application->jobSeeker->name}."
+            );
+        }
 
         return redirect()->route('applications.confirmation', $application);
     }
@@ -78,7 +103,19 @@ class ApplicationController extends Controller
             'status' => ['required', Rule::in(['pending', 'reviewed', 'shortlisted', 'interview', 'hired', 'rejected'])],
         ]);
 
+        $previousStatus = $application->status;
         $application->update($data);
+
+        $application->load('job.employer', 'jobSeeker');
+
+        // Notification on status transition
+        if ($application->jobSeeker && $previousStatus !== $data['status']) {
+            $application->jobSeeker->notify(new ApplicationStatusUpdatedNotification($application, $previousStatus));
+            SmsService::send(
+                $application->jobSeeker->phone,
+                "JobFinder Alert: Your application for '{$application->job->title}' is now: " . ucfirst($data['status'])
+            );
+        }
 
         return back()->with('status', 'Application status updated.');
     }
@@ -100,5 +137,32 @@ class ApplicationController extends Controller
         ]);
 
         return back()->with('status', 'Application withdrawn.');
+    }
+
+    /**
+     * Secure Resume Access:
+     * Only the applicant themselves, the employer of the job, or an administrator can download the resume.
+     */
+    public function downloadResume(JobApplication $application)
+    {
+        $user = auth()->user();
+        $application->load('job', 'jobSeeker');
+
+        $isApplicant = $user->id === $application->job_seeker_id;
+        $isEmployer = $application->job && $user->id === $application->job->employer_id;
+        $isAdmin = $user->isAdmin();
+
+        abort_unless($isApplicant || $isEmployer || $isAdmin, 403, 'Unauthorized access to resume.');
+
+        $disk = Storage::disk('local')->exists($application->resume_path)
+            ? 'local'
+            : (Storage::disk('public')->exists($application->resume_path) ? 'public' : null);
+
+        abort_unless($disk, 404, 'Resume file not found on server.');
+
+        $extension = pathinfo($application->resume_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $safeName = str($application->jobSeeker?->name ?? 'Candidate')->slug() . '-resume.' . $extension;
+
+        return Storage::disk($disk)->download($application->resume_path, $safeName);
     }
 }

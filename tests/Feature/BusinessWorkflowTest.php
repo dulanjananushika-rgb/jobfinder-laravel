@@ -113,6 +113,96 @@ class BusinessWorkflowTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_job_application_stores_resume_in_private_disk_and_sends_notifications(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        \Illuminate\Support\Facades\Notification::fake();
+
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'status' => 'active',
+            'employer_verified_at' => now(),
+        ]);
+        $seeker = User::factory()->create(['role' => 'job_seeker', 'status' => 'active']);
+        $job = $this->jobFor($employer, ['approved_at' => now()]);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('my_resume.pdf', 300, 'application/pdf');
+
+        $response = $this->actingAs($seeker)->post(route('applications.store', $job), [
+            'cover_letter' => 'Here is my detailed cover letter.',
+            'resume' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $application = JobApplication::where('job_id', $job->id)->where('job_seeker_id', $seeker->id)->first();
+        $this->assertNotNull($application);
+
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($application->resume_path);
+
+        \Illuminate\Support\Facades\Notification::assertSentTo($seeker, \App\Notifications\ApplicationSubmittedNotification::class);
+        \Illuminate\Support\Facades\Notification::assertSentTo($employer, \App\Notifications\NewApplicationReceivedNotification::class);
+    }
+
+    public function test_secure_resume_download_authorization_matrix(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'status' => 'active',
+            'employer_verified_at' => now(),
+        ]);
+        $otherEmployer = User::factory()->create([
+            'role' => 'employer',
+            'status' => 'active',
+            'employer_verified_at' => now(),
+        ]);
+        $seeker = User::factory()->create(['role' => 'job_seeker', 'status' => 'active']);
+        $otherSeeker = User::factory()->create(['role' => 'job_seeker', 'status' => 'active']);
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+
+        $job = $this->jobFor($employer, ['approved_at' => now()]);
+
+        $path = 'resumes/private_resume.pdf';
+        \Illuminate\Support\Facades\Storage::disk('local')->put($path, 'Sample resume binary content');
+
+        $application = JobApplication::create([
+            'job_id' => $job->id,
+            'job_seeker_id' => $seeker->id,
+            'cover_letter' => 'Test application',
+            'resume_path' => $path,
+            'status' => 'pending',
+        ]);
+
+        // 1. Guest is redirected to login
+        $this->get(route('applications.resume', $application))->assertRedirect(route('login'));
+
+        // 2. The applicant CAN download
+        $this->actingAs($seeker)
+            ->get(route('applications.resume', $application))
+            ->assertOk();
+
+        // 3. The job\'s employer CAN download
+        $this->actingAs($employer)
+            ->get(route('applications.resume', $application))
+            ->assertOk();
+
+        // 4. Admin CAN download
+        $this->actingAs($admin)
+            ->get(route('applications.resume', $application))
+            ->assertOk();
+
+        // 5. Unauthorized seeker gets 403 Forbidden
+        $this->actingAs($otherSeeker)
+            ->get(route('applications.resume', $application))
+            ->assertForbidden();
+
+        // 6. Another employer gets 403 Forbidden
+        $this->actingAs($otherEmployer)
+            ->get(route('applications.resume', $application))
+            ->assertForbidden();
+    }
+
     private function jobFor(User $employer, array $overrides = []): Job
     {
         return Job::create(array_merge([
