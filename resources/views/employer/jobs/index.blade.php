@@ -5,7 +5,7 @@
 <div class="section-head">
     <div>
         <h1>Manage Vacancies</h1>
-        <p class="muted" style="margin:0">Track your published roles, admin approvals, and candidate response.</p>
+        <p class="muted" style="margin:0">Track your published roles, views analytics, admin approvals, and candidate traction.</p>
     </div>
     @if(auth()->user()->isVerifiedEmployer())
         <a class="btn btn-sm" href="{{ route('employer.jobs.create') }}">+ Post New Job</a>
@@ -21,9 +21,9 @@
                 <tr>
                     <th>Job Title</th>
                     <th>Status</th>
-                    <th>Approval State</th>
-                    <th>Application Deadline</th>
-                    <th>Candidates</th>
+                    <th>Tier / Promotion</th>
+                    <th>Job Views</th>
+                    <th>Applicants</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -39,35 +39,44 @@
                 @endphp
                 <tr>
                     <td>
-                        <a href="{{ route('jobs.show', $job) }}" style="font-weight:700; color:var(--text-primary);">
+                        <a href="{{ route('jobs.show', $job) }}" style="font-weight:700; color:var(--text-heading);">
                             {{ $job->title }}
                         </a>
                         <div class="muted" style="font-size:12px;">📍 {{ $job->location }} &bull; {{ $job->type }}</div>
                     </td>
                     <td>
                         <span class="badge {{ $badgeClass }}">{{ ucfirst($job->status) }}</span>
-                    </td>
-                    <td>
                         @if($job->approved_at)
-                            <span class="badge green">✓ Approved</span>
                             <div class="muted" style="font-size:11px; margin-top:2px;">{{ $job->approved_at->format('M d, Y') }}</div>
-                        @elseif($job->status === 'rejected')
-                            <span class="badge red">✕ Rejected</span>
-                            @if($job->rejection_reason)
-                                <div class="muted" style="font-size:11px; color:#ef4444; margin-top:2px;">{{ $job->rejection_reason }}</div>
-                            @endif
-                        @else
-                            <span class="badge peach">⏳ Under Review</span>
+                        @elseif($job->status === 'rejected' && $job->rejection_reason)
+                            <div class="muted" style="font-size:11px; color:#ef4444; margin-top:2px;">{{ $job->rejection_reason }}</div>
                         @endif
                     </td>
                     <td>
-                        {{ optional($job->deadline)->format('M d, Y') ?: 'Open until filled' }}
+                        @if($job->is_featured)
+                            <span class="badge amber" style="background:#fffbeb; color:#b45309; border-color:#fde68a;">
+                                ★ Featured Active
+                            </span>
+                        @elseif($job->status === 'active')
+                            <form method="post" action="{{ route('employer.jobs.promote', $job) }}" style="display:inline;">
+                                @csrf
+                                <button class="btn secondary btn-sm" style="font-size:11.5px; border-color:#f59e0b; color:#b45309;" title="Pin to top of search results">
+                                    ⚡ Boost to Featured
+                                </button>
+                            </form>
+                        @else
+                            <span class="muted" style="font-size:12px;">Standard</span>
+                        @endif
                     </td>
                     <td>
-                        <a href="{{ route('employer.applications.index') }}" style="font-weight:700; color:var(--brand-primary);">
+                        <span style="font-weight:700; font-family:var(--font-heading);">{{ number_format($job->views_count) }}</span>
+                        <span class="muted" style="font-size:12px;"> views</span>
+                    </td>
+                    <td>
+                        <a href="{{ route('employer.applications.index') }}" style="font-weight:700; color:var(--primary);">
                             {{ $job->applications_count }}
                         </a>
-                        <span class="muted" style="font-size:12px;"> applicants</span>
+                        <span class="muted" style="font-size:12px;"> candidates</span>
                     </td>
                     <td>
                         <div class="actions">

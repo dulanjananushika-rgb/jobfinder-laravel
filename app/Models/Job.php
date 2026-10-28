@@ -22,6 +22,9 @@ class Job extends Model
         'responsibilities',
         'deadline',
         'status',
+        'is_featured',
+        'featured_until',
+        'views_count',
         'approved_at',
         'approved_by',
         'rejection_reason',
@@ -32,6 +35,9 @@ class Job extends Model
         return [
             'deadline' => 'date',
             'approved_at' => 'datetime',
+            'is_featured' => 'boolean',
+            'featured_until' => 'datetime',
+            'views_count' => 'integer',
         ];
     }
 
@@ -60,12 +66,18 @@ class Job extends Model
             ->whereHas('employer', fn ($employer) => $employer->whereNotNull('employer_verified_at')->where('status', 'active'));
     }
 
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
+
     public function isOpenForApplications(): bool
     {
         return $this->status === 'active'
-            && $this->approved_at !== null
-            && ($this->deadline === null || $this->deadline->isToday() || $this->deadline->isFuture())
-            && $this->employer?->isVerifiedEmployer()
-            && $this->employer?->status === 'active';
+            && ! is_null($this->approved_at)
+            && (! $this->deadline || $this->deadline->isFuture() || $this->deadline->isToday())
+            && $this->employer
+            && $this->employer->isVerifiedEmployer()
+            && $this->employer->status === 'active';
     }
 }

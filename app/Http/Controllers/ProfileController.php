@@ -23,9 +23,18 @@ class ProfileController extends Controller
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'phone' => ['nullable', 'regex:/^0\d{9}$/'],
             'company_name' => ['nullable', 'string', 'max:255'],
+            'company_size' => ['nullable', 'string', 'max:100'],
+            'company_perks' => ['nullable', 'string', 'max:2000'],
             'website' => ['nullable', 'url', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
             'bio' => ['nullable', 'string', 'max:2000'],
+            'headline' => ['nullable', 'string', 'max:255'],
+            'skills' => ['nullable', 'string', 'max:2000'],
+            'experience' => ['nullable', 'string', 'max:5000'],
+            'education' => ['nullable', 'string', 'max:5000'],
+            'portfolio_url' => ['nullable', 'url', 'max:255'],
+            'github_url' => ['nullable', 'url', 'max:255'],
+            'linkedin_url' => ['nullable', 'url', 'max:255'],
             'profile_picture' => ['nullable', 'image', 'max:2048'],
         ]);
 
@@ -33,9 +42,13 @@ class ProfileController extends Controller
             $data['profile_picture'] = $request->file('profile_picture')->store('profile-pictures', 'public');
         }
 
+        if (!empty($data['company_name'])) {
+            $data['company_slug'] = str($data['company_name'])->slug()->toString();
+        }
+
         $user->update($data);
 
-        return back()->with('status', 'Profile updated.');
+        return back()->with('status', 'Profile updated successfully.');
     }
 
     public function password(Request $request)

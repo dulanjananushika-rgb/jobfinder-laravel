@@ -15,6 +15,9 @@ class JobApplication extends Model
         'cover_letter',
         'resume_path',
         'status',
+        'ai_match_score',
+        'ai_summary',
+        'apply_type',
         'withdrawn_at',
         'withdraw_reason',
     ];
@@ -23,6 +26,7 @@ class JobApplication extends Model
     {
         return [
             'withdrawn_at' => 'datetime',
+            'ai_match_score' => 'integer',
         ];
     }
 
@@ -34,5 +38,15 @@ class JobApplication extends Model
     public function jobSeeker()
     {
         return $this->belongsTo(User::class, 'job_seeker_id');
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(ApplicationMessage::class, 'job_application_id')->oldest();
+    }
+
+    public function interview()
+    {
+        return $this->hasOne(Interview::class, 'job_application_id');
     }
 }

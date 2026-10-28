@@ -16,14 +16,13 @@ class JobController extends Controller
             ->when($request->filled('category'), fn ($query) => $query->where('main_category', $request->category))
             ->when($request->filled('type'), fn ($query) => $query->whereIn('type', (array) $request->type))
             ->when($request->filled('experience'), fn ($query) => $query->where('requirements', 'like', '%'.$request->experience.'%'))
+            ->orderByDesc('is_featured')
             ->when($request->get('sort') === 'oldest', fn ($query) => $query->oldest(), fn ($query) => $query->latest())
             ->paginate(9)
             ->withQueryString();
 
         return view('jobs.index', [
             'jobs' => $jobs,
-            // Keep the complete option lists visible even when there are no
-            // active jobs in a category or district yet.
             'categories' => collect(config('jobfinder.categories'))
                 ->merge(Job::active()->select('main_category')->distinct()->pluck('main_category'))
                 ->filter()
@@ -45,9 +44,12 @@ class JobController extends Controller
         $job->load('employer');
         abort_unless($job->isOpenForApplications() || $this->canManageJob($job), 404);
 
+        $job->increment('views_count');
+
         $hasApplied = auth()->check()
             ? auth()->user()->applications()->where('job_id', $job->id)->exists()
             : false;
+
         $isSaved = auth()->check()
             ? auth()->user()->savedJobs()->where('job_id', $job->id)->exists()
             : false;
@@ -57,13 +59,9 @@ class JobController extends Controller
 
     public function toggleSave(Job $job)
     {
-        $job->load('employer');
-        abort_unless($job->isOpenForApplications(), 404);
+        auth()->user()->savedJobs()->toggle($job->id);
 
-        $user = auth()->user();
-        $user->savedJobs()->toggle($job->id);
-
-        return back()->with('status', 'Saved jobs updated.');
+        return back();
     }
 
     private function canManageJob(Job $job): bool
@@ -72,7 +70,8 @@ class JobController extends Controller
             return false;
         }
 
-        return auth()->user()->isAdmin()
-            || (auth()->user()->isEmployer() && auth()->id() === $job->employer_id);
+        $user = auth()->user();
+
+        return $user->isAdmin() || ($user->isEmployer() && $user->id === $job->employer_id);
     }
 }

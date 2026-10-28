@@ -7,6 +7,7 @@ use App\Models\JobApplication;
 use App\Notifications\ApplicationStatusUpdatedNotification;
 use App\Notifications\ApplicationSubmittedNotification;
 use App\Notifications\NewApplicationReceivedNotification;
+use App\Services\AiCandidateMatchingService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,28 +21,60 @@ class ApplicationController extends Controller
         abort_unless($job->isOpenForApplications(), 404);
         abort_if(auth()->user()->applications()->where('job_id', $job->id)->exists(), 409);
 
-        return view('applications.create', compact('job'));
+        return view('applications.create', [
+            'job' => $job,
+            'user' => auth()->user(),
+        ]);
     }
 
     public function store(Request $request, Job $job)
     {
+        $user = auth()->user();
         $job->load('employer');
         abort_unless($job->isOpenForApplications(), 404);
-        abort_if(auth()->user()->applications()->where('job_id', $job->id)->exists(), 409);
+        abort_if($user->applications()->where('job_id', $job->id)->exists(), 409);
+
+        $applyType = $request->input('apply_type', 'upload');
 
         $data = $request->validate([
             'cover_letter' => ['required', 'string', 'max:2000'],
-            'resume' => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
+            'resume' => [$applyType === 'profile' ? 'nullable' : 'required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
         ]);
 
-        // Secure Storage: stored in private disk to prevent unauthenticated direct URL access
-        $path = $data['resume']->store('resumes', 'local');
+        if ($request->hasFile('resume')) {
+            $path = $data['resume']->store('resumes', 'local');
+        } else {
+            // Generate snapshot CV from Seeker Profile
+            $path = 'resumes/profile_' . $user->id . '_' . time() . '.txt';
+            Storage::disk('local')->put(
+                $path,
+                "JOBFINDER VERIFIED PROFILE CV\n" .
+                "============================\n" .
+                "Name: {$user->name}\n" .
+                "Email: {$user->email}\n" .
+                "Phone: {$user->phone}\n" .
+                "Headline: {$user->headline}\n" .
+                "Key Skills: {$user->skills}\n\n" .
+                "PROFESSIONAL EXPERIENCE:\n{$user->experience}\n\n" .
+                "EDUCATION & QUALIFICATIONS:\n{$user->education}\n\n" .
+                "ONLINE PROFILES:\n" .
+                "Portfolio: {$user->portfolio_url}\n" .
+                "GitHub: {$user->github_url}\n" .
+                "LinkedIn: {$user->linkedin_url}\n"
+            );
+        }
 
-        $application = auth()->user()->applications()->create([
+        // Run AI ATS Match Evaluation
+        $aiResult = AiCandidateMatchingService::evaluate($job, $user, $data['cover_letter']);
+
+        $application = $user->applications()->create([
             'job_id' => $job->id,
             'cover_letter' => $data['cover_letter'],
             'resume_path' => $path,
             'status' => 'pending',
+            'ai_match_score' => $aiResult['score'],
+            'ai_summary' => $aiResult['summary'],
+            'apply_type' => $applyType,
         ]);
 
         $application->load('job.employer', 'jobSeeker');
@@ -59,7 +92,7 @@ class ApplicationController extends Controller
             $job->employer->notify(new NewApplicationReceivedNotification($application));
             SmsService::send(
                 $job->employer->phone,
-                "JobFinder Alert: New application received for '{$job->title}' from {$application->jobSeeker->name}."
+                "JobFinder Alert: New application received for '{$job->title}' from {$application->jobSeeker->name} (Match: {$aiResult['score']}%)."
             );
         }
 
@@ -78,15 +111,16 @@ class ApplicationController extends Controller
     public function seekerIndex()
     {
         return view('seeker.applications', [
-            'applications' => auth()->user()->applications()->with('job.employer')->latest()->paginate(10),
+            'applications' => auth()->user()->applications()->with('job.employer', 'interview')->latest()->paginate(10),
         ]);
     }
 
     public function employerIndex(Request $request)
     {
-        $applications = JobApplication::with('job', 'jobSeeker')
+        $applications = JobApplication::with('job', 'jobSeeker', 'interview', 'messages')
             ->whereHas('job', fn ($query) => $query->where('employer_id', auth()->id()))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
+            ->when($request->filled('min_match'), fn ($query) => $query->where('ai_match_score', '>=', (int) $request->min_match))
             ->latest()
             ->paginate(10)
             ->withQueryString();
@@ -139,10 +173,6 @@ class ApplicationController extends Controller
         return back()->with('status', 'Application withdrawn.');
     }
 
-    /**
-     * Secure Resume Access:
-     * Only the applicant themselves, the employer of the job, or an administrator can download the resume.
-     */
     public function downloadResume(JobApplication $application)
     {
         $user = auth()->user();
@@ -160,7 +190,7 @@ class ApplicationController extends Controller
 
         abort_unless($disk, 404, 'Resume file not found on server.');
 
-        $extension = pathinfo($application->resume_path, PATHINFO_EXTENSION) ?: 'pdf';
+        $extension = pathinfo($application->resume_path, PATHINFO_EXTENSION) ?: 'txt';
         $safeName = str($application->jobSeeker?->name ?? 'Candidate')->slug() . '-resume.' . $extension;
 
         return Storage::disk($disk)->download($application->resume_path, $safeName);

@@ -203,6 +203,87 @@ class BusinessWorkflowTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_employer_can_promote_job_to_featured(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'status' => 'active',
+            'employer_verified_at' => now(),
+        ]);
+        $job = $this->jobFor($employer, ['approved_at' => now()]);
+
+        $this->actingAs($employer)
+            ->post(route('employer.jobs.promote', $job))
+            ->assertRedirect();
+
+        $this->assertTrue($job->fresh()->is_featured);
+    }
+
+    public function test_in_app_chat_and_interview_scheduling(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'status' => 'active',
+            'employer_verified_at' => now(),
+            'company_name' => 'Acme Tech',
+        ]);
+        $seeker = User::factory()->create(['role' => 'job_seeker', 'status' => 'active']);
+        $job = $this->jobFor($employer, ['approved_at' => now()]);
+
+        $application = JobApplication::create([
+            'job_id' => $job->id,
+            'job_seeker_id' => $seeker->id,
+            'cover_letter' => 'Skilled in Laravel and MySQL',
+            'resume_path' => 'resumes/test.txt',
+            'status' => 'pending',
+            'ai_match_score' => 88,
+        ]);
+
+        // Seeker sends a message
+        $this->actingAs($seeker)
+            ->post(route('applications.messages.store', $application), ['message' => 'Hello, excited for this opportunity!'])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('application_messages', [
+            'job_application_id' => $application->id,
+            'sender_id' => $seeker->id,
+            'message' => 'Hello, excited for this opportunity!',
+        ]);
+
+        // Employer schedules interview
+        $this->actingAs($employer)
+            ->post(route('employer.applications.interview', $application), [
+                'scheduled_at' => now()->addDays(2)->format('Y-m-d\TH:i'),
+                'location_type' => 'remote',
+                'meeting_link' => 'https://meet.google.com/xyz',
+                'notes' => 'Technical screening discussion.',
+            ])
+            ->assertRedirect();
+
+        $this->assertEquals('interview', $application->fresh()->status);
+        $this->assertDatabaseHas('interviews', [
+            'job_application_id' => $application->id,
+            'location_type' => 'remote',
+            'meeting_link' => 'https://meet.google.com/xyz',
+        ]);
+    }
+
+    public function test_company_showcase_page_is_publicly_accessible(): void
+    {
+        $employer = User::factory()->create([
+            'role' => 'employer',
+            'status' => 'active',
+            'company_name' => 'Colombo Cloud Solutions',
+            'company_slug' => 'colombo-cloud-solutions',
+            'bio' => 'Enterprise cloud software builders.',
+        ]);
+
+        $this->get(route('companies.show', $employer))
+            ->assertOk()
+            ->assertSee('Colombo Cloud Solutions')
+            ->assertSee('Enterprise cloud software builders.');
+    }
+
     private function jobFor(User $employer, array $overrides = []): Job
     {
         return Job::create(array_merge([

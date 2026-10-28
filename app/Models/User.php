@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -27,10 +26,23 @@ class User extends Authenticatable
         'status',
         'employer_verified_at',
         'company_name',
+        'company_slug',
+        'company_banner',
+        'company_size',
+        'company_perks',
         'website',
         'profile_picture',
         'address',
         'bio',
+        'headline',
+        'skills',
+        'experience',
+        'education',
+        'portfolio_url',
+        'github_url',
+        'linkedin_url',
+        'google_id',
+        'linkedin_id',
     ];
 
     /**
@@ -73,6 +85,21 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function interviewsAsEmployer()
+    {
+        return $this->hasMany(Interview::class, 'employer_id');
+    }
+
+    public function interviewsAsCandidate()
+    {
+        return $this->hasMany(Interview::class, 'candidate_id');
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(ApplicationMessage::class, 'sender_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -85,11 +112,24 @@ class User extends Authenticatable
 
     public function isVerifiedEmployer(): bool
     {
-        return $this->isEmployer() && $this->employer_verified_at !== null;
+        return $this->isEmployer() && ! is_null($this->employer_verified_at);
     }
 
     public function isJobSeeker(): bool
     {
         return $this->role === 'job_seeker';
+    }
+
+    public function getSkillsArrayAttribute(): array
+    {
+        if (empty($this->skills)) {
+            return [];
+        }
+        return array_values(array_filter(array_map('trim', explode(',', $this->skills))));
+    }
+
+    public function getCompanySlugAttribute(): string
+    {
+        return $this->attributes['company_slug'] ?? str($this->company_name ?: $this->name)->slug()->toString();
     }
 }

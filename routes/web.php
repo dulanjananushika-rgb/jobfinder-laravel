@@ -3,20 +3,31 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployerJobController;
+use App\Http\Controllers\FeaturedJobController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
+// Public Static & Information Pages
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/about', 'pages.about')->name('about');
 Route::view('/contact', 'pages.contact')->name('contact');
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
-Route::view('/companies', 'pages.companies')->name('companies');
+
+// Company Showcases & Micro-Sites
+Route::get('/companies', [CompanyController::class, 'index'])->name('companies');
+Route::get('/companies/{company}', [CompanyController::class, 'show'])->name('companies.show');
+
+// Career Advice, Tips & Policies
 Route::view('/career-advice', 'pages.career-advice')->name('career-advice');
 Route::view('/resume-tips', 'pages.resume-tips')->name('resume-tips');
 Route::view('/interview-tips', 'pages.interview-tips')->name('interview-tips');
@@ -24,26 +35,40 @@ Route::view('/blog', 'pages.blog')->name('blog');
 Route::view('/privacy', 'pages.privacy')->name('privacy');
 Route::view('/terms', 'pages.terms')->name('terms');
 
+// Job Directory
 Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobController::class, 'show'])->name('jobs.show');
 
+// Guest Authentication & Social Login
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+
+    // Socialite OAuth Routes (Google & LinkedIn)
+    Route::get('/auth/{provider}', [SocialAuthController::class, 'redirect'])->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 });
 
+// Authenticated Core Routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+
+    // Secure Resume Download & In-App Notification Mark Read
     Route::get('/applications/{application}/resume', [ApplicationController::class, 'downloadResume'])->name('applications.resume');
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markRead');
+
+    // Direct Messaging between Employer & Candidate
+    Route::get('/applications/{application}/messages', [ChatController::class, 'show'])->name('applications.messages');
+    Route::post('/applications/{application}/messages', [ChatController::class, 'store'])->name('applications.messages.store');
 });
 
+// Job Seeker Routes
 Route::middleware(['auth', 'role:job_seeker'])->group(function () {
     Route::get('/jobs/{job}/apply', [ApplicationController::class, 'create'])->name('applications.create');
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store'])->name('applications.store');
@@ -56,12 +81,16 @@ Route::middleware(['auth', 'role:job_seeker'])->group(function () {
     ]))->name('seeker.saved-jobs');
 });
 
+// Employer Management Routes
 Route::middleware(['auth', 'role:employer'])->prefix('employer')->name('employer.')->group(function () {
     Route::resource('jobs', EmployerJobController::class)->except('show');
+    Route::post('/jobs/{job}/promote', [FeaturedJobController::class, 'promote'])->name('jobs.promote');
     Route::get('/applications', [ApplicationController::class, 'employerIndex'])->name('applications.index');
     Route::put('/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('applications.status');
+    Route::post('/applications/{application}/interview', [InterviewController::class, 'store'])->name('applications.interview');
 });
 
+// System Administrator Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
