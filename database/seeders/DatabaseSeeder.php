@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (User::where('email', 'admin@jobfinder.test')->exists()) {
+            return;
+        }
+
         User::create([
             'name' => 'Administrator',
             'email' => 'admin@jobfinder.test',

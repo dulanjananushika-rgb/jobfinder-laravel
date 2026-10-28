@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: jobfinder-laravel
+    runtime: docker
+    repo: https://github.com/dulanjananushika-rgb/jobfinder-laravel.git
+    branch: main
+    region: singapore
+    plan: free
+    numInstances: 1
+    healthCheckPath: /up
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_NAME
+        value: JobFinder
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/database.sqlite
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: LOG_CHANNEL
+        value: stderr

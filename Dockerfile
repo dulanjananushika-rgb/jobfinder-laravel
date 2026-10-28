@@ -2,7 +2,7 @@
 FROM php:8.3-cli
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libsqlite3-dev libzip-dev libicu-dev libonig-dev libxml2-dev nodejs npm \
+    && apt-get install -y --no-install-recommends git unzip libsqlite3-dev libzip-dev libicu-dev libonig-dev libxml2-dev \
     && docker-php-ext-install pdo_sqlite mbstring bcmath exif pcntl zip intl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,15 +20,13 @@ ENV APP_ENV=production \
     QUEUE_CONNECTION=sync \
     LOG_CHANNEL=stderr
 
-RUN cp .env.example .env \
+RUN cp -n .env.example .env || true \
     && composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
-    && npm install --no-audit --no-fund \
-    && npm run build \
-    && mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
+    && mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/app/private/resumes bootstrap/cache \
     && touch database/database.sqlite \
     && php artisan key:generate --force \
-    && php artisan migrate --force \
+    && chmod +x docker-entrypoint.sh \
     && chown -R www-data:www-data storage bootstrap/cache database
 
 EXPOSE 10000
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
+ENTRYPOINT ["/var/www/html/docker-entrypoint.sh"]
